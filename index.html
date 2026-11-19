@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'self'; require-trusted-types-for 'script'; trusted-types 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Salt Leaching Simulator</title>
+<meta name="description" content="One-dimensional soil salt-leaching simulator based on the Ogata–Banks solution.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="home">
+<div class="app">
+<aside class="appnav" aria-label="Application">
+  <div class="brand">
+    <img src="favicon.svg" alt="" width="20" height="20">
+    <span class="brand-name">Salt Leaching Simulator</span>
+  </div>
+  <nav class="nav" id="nav" aria-label="Menu">
+    <div class="nav-group" data-section="home">
+      <a class="nav-link" href="#/home">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 7.2 8 2.5l5.5 4.7"/><path d="M4 6v7.5h8V6"/></svg>
+        <span>Home</span>
+      </a>
+      <ul class="nav-sub">
+        <li><a class="nav-sublink" href="#/home/introduction">Introduction</a></li>
+        <li><a class="nav-sublink" href="#/home/purpose">Purpose</a></li>
+        <li><a class="nav-sublink" href="#/home/applications">Applications</a></li>
+        <li><a class="nav-sublink" href="#/home/quick-start">Quick start</a></li>
+      </ul>
+    </div>
+    <div class="nav-group" data-section="model">
+      <a class="nav-link" href="#/model">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h4A1.5 1.5 0 0 1 8 5v8.5A1.5 1.5 0 0 0 6.5 12h-4z"/><path d="M13.5 3.5h-4A1.5 1.5 0 0 0 8 5v8.5A1.5 1.5 0 0 1 9.5 12h4z"/></svg>
+        <span>Model</span>
+      </a>
+      <ul class="nav-sub">
+        <li><a class="nav-sublink" href="#/model/ade">ADE equation</a></li>
+        <li><a class="nav-sublink" href="#/model/ogata-banks">Ogata–Banks (1961)</a></li>
+        <li><a class="nav-sublink" href="#/model/solution">Analytical solution</a></li>
+        <li><a class="nav-sublink" href="#/model/assumptions">Assumptions</a></li>
+      </ul>
+    </div>
+
+    <p class="nav-label">Simulator</p>
+    <div class="nav-group" data-section="parameters">
+      <a class="nav-link" href="#/parameters">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.5h2M7.5 4.5h6M2.5 8h7M12.5 8h1M2.5 11.5h3M8.5 11.5h5"/><circle cx="6" cy="4.5" r="1.5"/><circle cx="11" cy="8" r="1.5"/><circle cx="7" cy="11.5" r="1.5"/></svg>
+        <span>Parameters</span>
+      </a>
+      <ul class="nav-sub">
+        <li><a class="nav-sublink" href="#/parameters/velocity">Flow velocity <i>v</i></a></li>
+        <li><a class="nav-sublink" href="#/parameters/dispersion">Dispersion <i>D</i></a></li>
+        <li><a class="nav-sublink" href="#/parameters/porosity">Porosity <i>θ</i></a></li>
+        <li><a class="nav-sublink" href="#/parameters/concentration">Concentration <i>C</i><sub>0</sub>, <i>C</i><sub>i</sub></a></li>
+      </ul>
+    </div>
+    <div class="nav-group" data-section="setup">
+      <a class="nav-link" href="#/setup">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6 5 5M11 11l1.4 1.4M3.6 12.4 5 11M11 5l1.4-1.4"/></svg>
+        <span>Setup</span>
+      </a>
+      <ul class="nav-sub">
+        <li><a class="nav-sublink" href="#/setup/time">Time <i>t</i></a></li>
+        <li><a class="nav-sublink" href="#/setup/distance">Distance <i>x</i></a></li>
+        <li><a class="nav-sublink" href="#/setup/initial">Initial condition</a></li>
+        <li><a class="nav-sublink" href="#/setup/boundary">Boundary condition</a></li>
+      </ul>
+    </div>
+    <div class="nav-group" data-section="run">
+      <a class="nav-link" href="#/run">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6l7.5-4.8z"/></svg>
+        <span>Run</span>
+      </a>
+      <ul class="nav-sub">
+        <li><button type="button" class="nav-sublink" data-action="run">Run calculation</button></li>
+        <li><a class="nav-sublink" href="#/run/status">Show status</a></li>
+        <li><button type="button" class="nav-sublink" data-action="reset">Reset</button></li>
+      </ul>
+    </div>
+    <div class="nav-group" data-section="results">
+      <a class="nav-link" href="#/results">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 2.5v11h11"/><path d="m4.5 10.5 3-4 2 2 3.5-5"/></svg>
+        <span>Results</span>
+      </a>
+      <ul class="nav-sub">
+        <li><a class="nav-sublink" href="#/results/profiles">Concentration profiles</a></li>
+        <li><a class="nav-sublink" href="#/results/breakthrough">Breakthrough curves</a></li>
+        <li><a class="nav-sublink" href="#/results/graphs">Graphs</a></li>
+        <li><a class="nav-sublink" href="#/results/tables">Tables</a></li>
+      </ul>
+    </div>
+    <div class="nav-group" data-section="export">
+      <a class="nav-link" href="#/export">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5V10M5 7l3 3 3-3"/><path d="M2.5 11.5v2h11v-2"/></svg>
+        <span>Export</span>
+      </a>
+      <ul class="nav-sub">
+        <li><button type="button" class="nav-sublink" data-action="xlsx">Excel (XLSX)</button></li>
+        <li><button type="button" class="nav-sublink" data-action="csv">CSV</button></li>
+        <li><button type="button" class="nav-sublink" data-action="pdf">PDF (report)</button></li>
+        <li><button type="button" class="nav-sublink" data-action="png">PNG (graphs)</button></li>
+        <li><button type="button" class="nav-sublink" data-action="svg">SVG (graphs)</button></li>
+      </ul>
+    </div>
+
+    <p class="nav-label">Data</p>
+    <div class="nav-group" data-section="data">
+      <a class="nav-link" href="#/data">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M2.5 6.5h11M2.5 10h11M6.5 6.5v7"/></svg>
+        <span>Field data</span>
+      </a>
+    </div>
+  </nav>
+  <div class="appnav-foot">
+    <button type="button" class="account" id="account" hidden>Sign in</button>
+    <span class="brand-version">Model v<span id="model-version"></span></span>
+  </div>
+</aside>
+
+<div class="workspace">
+<header class="topbar">
+  <h1 class="page-title" id="page-title">Home</h1>
+  <span class="badge" id="example-badge" hidden>Example data</span>
+  <div class="topbar-actions" id="sim-actions">
+    <button type="button" class="btn btn-sm" id="open-scenario" title="Open a saved scenario file (.json)">Open<span class="wide"> scenario</span></button>
+    <button type="button" class="btn btn-sm" id="save-scenario" title="Save the current inputs as a scenario file (.json)">Save<span class="wide"> scenario</span></button>
+    <input type="file" id="load-scenario" accept=".json,application/json" hidden>
+  </div>
+</header>
+
+<div class="page" id="page-home" hidden>
+  <main class="main doc-main">
+    <article class="doc">
+      <header class="doc-head">
+        <h2 class="doc-title">Salt Leaching Simulator</h2>
+        <p class="doc-lead">One-dimensional simulation of salt leaching from saline soil by ponded water, based on the
+          advection–dispersion equation and the analytical solution of Ogata and Banks (1961).</p>
+      </header>
+
+      <section class="doc-section" id="home-introduction">
+        <h3>Introduction</h3>
+        <p>Salinity limits crop yields on irrigated land. Saline soils are reclaimed by leaching: water is ponded on
+          the surface, infiltrates and carries dissolved salt down, below the root zone. How much salt is removed depends
+          on the amount and the salinity of the leaching water and on how water and salt move through the soil.</p>
+        <p>The simulator describes this movement with the one-dimensional advection–dispersion equation (ADE) for a
+          homogeneous soil profile from the surface to 200 cm. It starts from the measured salinity at eight depths and
+          calculates the salinity at every depth and time.</p>
+      </section>
+
+      <section class="doc-section" id="home-purpose">
+        <h3>Purpose</h3>
+        <ul>
+          <li>Calculate the salinity profile before leaching, after each water application and at later times.</li>
+          <li>Compare leaching water of different salinity: fresh water, drainage water and their mixtures.</li>
+          <li>Compare the model with the salinity measured in the field, layer by layer, and report the fit.</li>
+          <li>Estimate the salt stored in the profile and the share removed by leaching.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section" id="home-applications">
+        <h3>Applications</h3>
+        <ul>
+          <li><strong>Leaching norms.</strong> The water needed (number of applications × depth per application) to
+            lower the salinity of the root zone.</li>
+          <li><strong>Water treatments.</strong> The field experiment with fresh water (0.4 g/L), drainage water
+            (39 g/L) and the mixtures 1:1 (≈ 20 g/L) and 1:3 (≈ 29 g/L).</li>
+          <li><strong>Field data.</strong> Salinity measured at 25–200 cm before and after each application, entered
+            on the Field data page and compared with the model.</li>
+          <li><strong>Teaching.</strong> The effect of flow velocity, dispersion and porosity on salt transport.</li>
+        </ul>
+      </section>
+
+      <section class="doc-section" id="home-quick-start">
+        <h3>Quick start</h3>
+        <ol class="steps">
+          <li><a href="#/parameters">Parameters</a>: enter the flow velocity <i>v</i>, the dispersion <i>D</i> and the
+            porosity <i>θ</i>; choose the leaching water (<i>C</i><sub>0</sub>); enter the initial salinity
+            <i>C</i><sub>i</sub> at each depth or paste a column from Excel.</li>
+          <li><a href="#/setup">Setup</a>: the number of applications and the water per application, the depths for
+            the breakthrough curves, and how the samples were taken (layers or points).</li>
+          <li><a href="#/run">Run</a>: press Run (or Enter in a field); the results open. The Run page shows the
+            status and the inputs of the last run.</li>
+          <li><a href="#/results">Results</a>: salinity profiles, breakthrough curves and tables.
+            <a href="#/export">Export</a> them to Excel, CSV or a PDF report, and the graphs as PNG or SVG.</li>
+        </ol>
+        <p>To compare with measurements, open <a href="#/data">Field data</a>, enter the measured salinity of a plot
+          and press Run model.</p>
+      </section>
+    </article>
+  </main>
+</div>
+
+<div class="page" id="page-model" hidden>
+  <main class="main doc-main">
+    <article class="doc">
+      <header class="doc-head">
+        <h2 class="doc-title">Model</h2>
+        <p class="doc-lead">The equation, its classical solution, the solution used for leaching, and the
+          assumptions behind it.</p>
+      </header>
+
+      <section class="doc-section" id="model-ade">
+        <h3>ADE equation</h3>
+        <p>Conservation of a dissolved, non-reactive salt in one dimension, with depth <i>x</i> positive downward:</p>
+        <div class="eq"><math display="block">
+          <mfrac><mrow><mi>∂</mi><mi>C</mi></mrow><mrow><mi>∂</mi><mi>t</mi></mrow></mfrac>
+          <mo>=</mo><mi>D</mi>
+          <mfrac><mrow><msup><mi>∂</mi><mn>2</mn></msup><mi>C</mi></mrow><mrow><mi>∂</mi><msup><mi>x</mi><mn>2</mn></msup></mrow></mfrac>
+          <mo>−</mo><mi>v</mi>
+          <mfrac><mrow><mi>∂</mi><mi>C</mi></mrow><mrow><mi>∂</mi><mi>x</mi></mrow></mfrac>
+        </math></div>
+        <p>Advection (the term with <i>v</i>) moves salt with the water. Dispersion (the term with <i>D</i>) spreads
+          it, because the water moves at different speeds in different pores.</p>
+        <table class="doc-table">
+          <thead><tr><th scope="col">Symbol</th><th scope="col">Meaning</th><th scope="col">Unit</th></tr></thead>
+          <tbody>
+            <tr><td><i>C</i></td><td>Salinity of the soil solution</td><td>g/L</td></tr>
+            <tr><td><i>x</i></td><td>Depth below the soil surface</td><td>cm</td></tr>
+            <tr><td><i>t</i></td><td>Time since the first application started</td><td>h</td></tr>
+            <tr><td><i>v</i></td><td>Flow velocity (average pore-water velocity), <i>v</i> = <i>q</i>/<i>θ</i></td><td>cm/h</td></tr>
+            <tr><td><i>D</i></td><td>Longitudinal dispersion coefficient</td><td>cm²/h</td></tr>
+            <tr><td><i>θ</i></td><td>Porosity filled with water during leaching (volumetric water content)</td><td>m³/m³</td></tr>
+            <tr><td><i>q</i></td><td>Water flux (Darcy flux)</td><td>cm/h</td></tr>
+            <tr><td><i>C</i><sub>0</sub></td><td>Salinity of the applied water</td><td>g/L</td></tr>
+            <tr><td><i>C</i><sub>i</sub></td><td>Initial salinity of the soil</td><td>g/L</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="doc-section" id="model-ogata-banks">
+        <h3>Ogata–Banks (1961)</h3>
+        <p>Ogata and Banks solved the ADE for a semi-infinite medium that is initially free of solute, with the
+          concentration at the inlet raised to <i>C</i><sub>0</sub> at <i>t</i> = 0:</p>
+        <div class="eq"><math display="block">
+          <mi>C</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo><mo>=</mo><mn>0</mn>
+          <mo separator="true">,</mo><mspace width="1.5em"/>
+          <mi>C</mi><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>C</mi><mn>0</mn></msub>
+          <mo separator="true">,</mo><mspace width="1.5em"/>
+          <mi>C</mi><mo stretchy="false">(</mo><mi>∞</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mn>0</mn>
+        </math></div>
+        <div class="eq"><math display="block">
+          <mfrac><mi>C</mi><msub><mi>C</mi><mn>0</mn></msub></mfrac><mo>=</mo>
+          <mi>A</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo>
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <mrow><mo>[</mo>
+            <mi>erfc</mi><mo>&#x2061;</mo><mrow><mo>(</mo><mfrac><mrow><mi>x</mi><mo>−</mo><mi>v</mi><mi>t</mi></mrow><mrow><mn>2</mn><msqrt><mi>D</mi><mi>t</mi></msqrt></mrow></mfrac><mo>)</mo></mrow>
+            <mo>+</mo>
+            <mi>exp</mi><mo>&#x2061;</mo><mrow><mo>(</mo><mfrac><mrow><mi>v</mi><mi>x</mi></mrow><mi>D</mi></mfrac><mo>)</mo></mrow>
+            <mi>erfc</mi><mo>&#x2061;</mo><mrow><mo>(</mo><mfrac><mrow><mi>x</mi><mo>+</mo><mi>v</mi><mi>t</mi></mrow><mrow><mn>2</mn><msqrt><mi>D</mi><mi>t</mi></msqrt></mrow></mfrac><mo>)</mo></mrow>
+          <mo>]</mo></mrow>
+        </math></div>
+        <p><i>A</i> is the breakthrough fraction: 0 before the water front arrives at depth <i>x</i>, 1 when the
+          applied water has replaced the soil solution there. The second term is small when <i>vx</i>/<i>D</i> is large;
+          the simulator always keeps it. Check value from the reference guide: <i>x</i> = 100 cm,
+          <i>v</i> = 0.10 cm/h, <i>D</i> = 1.0 cm²/h and <i>t</i> = 1000 h give <i>A</i> = 0.5853.</p>
+      </section>
+
+      <section class="doc-section" id="model-solution">
+        <h3>Analytical solution</h3>
+        <p>For leaching the problem is reversed: the soil is saline at the start, and water of salinity
+          <i>C</i><sub>0</sub> is applied at the surface. The initial salinity <i>C</i><sub>i</sub>(<i>x</i>) comes from
+          the measurements at 25, 50 … 200 cm:</p>
+        <div class="eq"><math display="block">
+          <mi>C</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mn>0</mn><mo stretchy="false">)</mo><mo>=</mo>
+          <msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo>
+          <mo separator="true">,</mo><mspace width="1.5em"/>
+          <mi>C</mi><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><msub><mi>C</mi><mn>0</mn></msub>
+        </math></div>
+        <p>The measured profile is a sum of steps of height Δ<i>c</i><sub>j</sub> at depths <i>z</i><sub>j</sub>,
+          <i>C</i><sub>i</sub>(<i>x</i>) = Σ Δ<i>c</i><sub>j</sub> <i>H</i>(<i>x</i> − <i>z</i><sub>j</sub>). The equation is
+          linear, so the solution is the sum of the response to the applied water and the responses to each step:</p>
+        <div class="eq"><math display="block">
+          <mi>C</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo>
+          <msub><mi>C</mi><mn>0</mn></msub><mi>A</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo>
+          <mo>+</mo><munder><mo>∑</mo><mi>j</mi></munder>
+          <mi mathvariant="normal">Δ</mi><msub><mi>c</mi><mi>j</mi></msub>
+          <mi>Q</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo>;</mo><msub><mi>z</mi><mi>j</mi></msub><mo stretchy="false">)</mo>
+        </math></div>
+        <div class="eq"><math display="block">
+          <mi>Q</mi><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo>;</mo><mi>z</mi><mo stretchy="false">)</mo><mo>=</mo>
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <mi>erfc</mi><mo>&#x2061;</mo><mrow><mo>(</mo><mfrac><mrow><mi>z</mi><mo>−</mo><mi>x</mi><mo>+</mo><mi>v</mi><mi>t</mi></mrow><mrow><mn>2</mn><msqrt><mi>D</mi><mi>t</mi></msqrt></mrow></mfrac><mo>)</mo></mrow>
+          <mo>−</mo>
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <mi>exp</mi><mo>&#x2061;</mo><mrow><mo>(</mo><mfrac><mrow><mi>v</mi><mi>x</mi></mrow><mi>D</mi></mfrac><mo>)</mo></mrow>
+          <mi>erfc</mi><mo>&#x2061;</mo><mrow><mo>(</mo><mfrac><mrow><mi>x</mi><mo>+</mo><mi>z</mi><mo>+</mo><mi>v</mi><mi>t</mi></mrow><mrow><mn>2</mn><msqrt><mi>D</mi><mi>t</mi></msqrt></mrow></mfrac><mo>)</mo></mrow>
+        </math></div>
+        <p>For a uniform initial salinity this reduces to <i>C</i> = <i>C</i><sub>i</sub> +
+          (<i>C</i><sub>0</sub> − <i>C</i><sub>i</sub>)·<i>A</i>. Unlike a depth-by-depth calculation, the sum carries
+          the salt washed out of one layer into the layers below, so a salt front moves down through the profile. The
+          solution agrees with an independent finite-difference calculation within 0.007 g/L.</p>
+        <p>The applied water sets the time. With the water flux <i>q</i> = <i>vθ</i>, application <i>n</i> of depth
+          <i>W</i> ends at</p>
+        <div class="eq"><math display="block">
+          <msub><mi>t</mi><mi>n</mi></msub><mo>=</mo><mfrac><mrow><mi>n</mi><mi>W</mi></mrow><mrow><mi>v</mi><mi>θ</mi></mrow></mfrac>
+        </math></div>
+        <p>The salt stored in the profile from 0 to <i>L</i> = 200 cm is
+          <i>S</i> = 0.1 <i>θ</i> ∫ <i>C</i> d<i>x</i> in t/ha (<i>C</i> in g/L, <i>x</i> in cm).</p>
+      </section>
+
+      <section class="doc-section" id="model-assumptions">
+        <h3>Assumptions</h3>
+        <ul>
+          <li>Homogeneous soil: <i>v</i>, <i>D</i> and <i>θ</i> are the same at all depths and do not change with time.</li>
+          <li>Vertical, one-dimensional flow. The applications follow each other without pauses; drainage and
+            evaporation between applications are not modelled.</li>
+          <li>Salt is conservative: no sorption, precipitation, dissolution or uptake by plants.</li>
+          <li>Surface: the soil solution at the surface has the salinity of the applied water,
+            <i>C</i>(0, <i>t</i>) = <i>C</i><sub>0</sub> (first-type boundary condition).</li>
+          <li>Bottom: the soil continues below 200 cm with the salinity of the deepest sample, and salt leaves the
+            profile freely (semi-infinite domain).</li>
+          <li>Samples: a layer sample (0–25 cm …) is compared with the model average over that layer; a point sample
+            with the model value at that depth.</li>
+        </ul>
+        <p class="doc-ref">Ogata, A. and Banks, R. B. (1961). A solution of the differential equation of longitudinal
+          dispersion in porous media. U.S. Geological Survey Professional Paper 411-A.</p>
+      </section>
+    </article>
+  </main>
+</div>
+
+<div class="page sim" id="page-sim" hidden>
+  <div class="banner sim-banner" id="errors" role="alert" hidden></div>
+
+  <!-- One view per menu item: the body's data-section picks it (css: Simulator views). -->
+  <form class="sim-form" id="inputs" novalidate autocomplete="off" aria-label="Simulation inputs">
+    <div class="sim-group" id="group-parameters">
+      <header class="view-head">
+        <h2 class="view-title">Parameters</h2>
+        <p class="view-lead">Soil and flow properties, the leaching water and the initial salinity. Press Run to calculate.</p>
+      </header>
+      <section class="panel">
+        <h3 class="panel-title">Soil and flow</h3>
+        <div class="row">
+          <label for="u" title="Average pore-water velocity v = q/θ, where q is the water (Darcy) flux (cm/h)">Flow velocity <i>v</i></label>
+          <span class="input-unit"><input id="u" type="text" inputmode="decimal"><span class="unit">cm/h</span></span>
+        </div>
+        <div class="row">
+          <label for="D" title="Longitudinal dispersion coefficient D (cm²/h); dispersivity α = D/v">Dispersion <i>D</i></label>
+          <span class="input-unit"><input id="D" type="text" inputmode="decimal"><span class="unit">cm²/h</span></span>
+        </div>
+        <div class="row">
+          <label for="theta" title="Porosity filled with water during leaching, i.e. the volumetric water content θ (m³/m³). Under ponding the soil is close to saturation, so θ is close to the total porosity.">Porosity <i>θ</i></label>
+          <span class="input-unit"><input id="theta" type="text" inputmode="decimal"><span class="unit">m³/m³</span></span>
+        </div>
+        <dl class="derived" id="derived"></dl>
+      </section>
+
+      <section class="panel" id="sec-concentration">
+        <h3 class="panel-title">Concentration</h3>
+        <div class="row">
+          <label for="treatment" title="Water used for leaching (field treatment)">Leaching water</label>
+          <select id="treatment"></select>
+        </div>
+        <div class="row">
+          <label for="cIn" title="Salinity of the applied water C₀ (g/L): the concentration at the soil surface">Water salinity <i>C</i><sub>0</sub></label>
+          <span class="input-unit"><input id="cIn" type="text" inputmode="decimal"><span class="unit">g/L</span></span>
+        </div>
+        <h4 class="panel-subtitle" title="Measured salinity before leaching, per sampling depth (g/L)">Initial salinity <i>C</i><sub>i</sub></h4>
+        <div class="rows" id="sample-rows" title="Paste a column from Excel into the first row to fill all depths"></div>
+      </section>
+    </div>
+
+    <div class="sim-group" id="group-setup">
+      <header class="view-head">
+        <h2 class="view-title">Setup</h2>
+        <p class="view-lead">Times, depths, and the initial and boundary conditions. Press Run to calculate.</p>
+      </header>
+      <section class="panel" id="sec-time">
+        <h3 class="panel-title" title="Applications set the observation times: application n ends at t = n·W/(v·θ)">Time <i>t</i></h3>
+        <div class="row">
+          <label for="nApplications" title="Number of water applications n">Applications <i>n</i></label>
+          <span class="input-unit"><input id="nApplications" type="text" inputmode="numeric"><span class="unit">×</span></span>
+        </div>
+        <div class="row">
+          <label for="appDepthMm" title="Depth of water per application W (mm); 250 mm = 2,500 m³/ha. Each application lasts t = W/(v·θ)">Water per application <i>W</i></label>
+          <span class="input-unit"><input id="appDepthMm" type="text" inputmode="decimal"><span class="unit">mm</span></span>
+        </div>
+        <div class="panel-head">
+          <h4 class="panel-subtitle" title="Further output times, in hours since leaching began (for example after wheat)">Additional times</h4>
+          <button type="button" class="link-btn" id="add-time">+ Add</button>
+        </div>
+        <div class="rows" id="extra-times"></div>
+      </section>
+
+      <section class="panel" id="sec-distance">
+        <h3 class="panel-title" title="Depths at which salinity is plotted against time. Profiles always cover 0–200 cm.">Distance <i>x</i></h3>
+        <p class="panel-note">Breakthrough curves at</p>
+        <div class="chips" id="bt-depths"></div>
+      </section>
+
+      <section class="panel" id="sec-initial">
+        <div class="panel-head">
+          <h3 class="panel-title" title="How the initial salinity Cᵢ is spread over depth">Initial condition</h3>
+          <div class="segmented segmented-sm" role="radiogroup" aria-label="Sample type">
+            <label title="Composite sample of the layer above each depth"><input type="radio" name="sampleMode" id="mode-layer" value="layer">Layers</label>
+            <label title="Measured at exactly each depth"><input type="radio" name="sampleMode" id="mode-point" value="point">Points</label>
+          </div>
+        </div>
+        <p class="panel-note" id="ic-text"></p>
+      </section>
+
+      <section class="panel" id="sec-boundary">
+        <h3 class="panel-title">Boundary condition</h3>
+        <dl class="conditions">
+          <dt>Surface</dt>
+          <dd><i>C</i>(0, <i>t</i>) = <i>C</i><sub>0</sub>, first type</dd>
+          <dt>Bottom</dt>
+          <dd>Free drainage below 200 cm</dd>
+        </dl>
+      </section>
+
+    </div>
+  </form>
+
+  <main class="main" id="results">
+    <section class="view narrow" id="run-view" aria-labelledby="run-title">
+      <header class="view-head">
+        <h2 class="view-title" id="run-title">Run</h2>
+        <p class="view-lead">Calculate the results for the inputs under <a href="#/parameters">Parameters</a> and <a href="#/setup">Setup</a>.</p>
+      </header>
+      <div class="card run-card">
+        <p class="run-status run-state" id="run-state"></p>
+        <p class="run-last" id="run-last"></p>
+        <div class="run-card-actions">
+          <button type="button" class="btn btn-primary btn-run" id="run-now">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6l7.5-4.8z"/></svg>Run calculation
+          </button>
+          <button type="button" class="btn" id="run-reset" title="Restore the example inputs; the results wait for Run">Reset to the example</button>
+        </div>
+      </div>
+      <section class="card" id="run-inputs-card">
+        <div class="card-heading">
+          <h3 class="card-title">Inputs of the last run</h3>
+          <p class="card-sub">These values produced the results and the exports.</p>
+        </div>
+        <div class="table-wrap"><table class="data" id="run-inputs"></table></div>
+      </section>
+    </section>
+
+    <div class="view" id="results-view">
+      <div class="context" id="context" hidden>
+        <span class="context-label">Run</span>
+        <span class="context-text" id="context-text"></span>
+        <a class="context-link" id="context-link" href="#/data">Back to data</a>
+        <button type="button" class="icon-btn" id="context-close" aria-label="Hide">×</button>
+      </div>
+
+      <div class="toolbar">
+        <p class="summary" id="summary"></p>
+        <div class="segmented" role="radiogroup" aria-label="Units" title="Salinity C (g/L) or relative salinity C/Cᵢ (Cᵢ: initial salinity of the layer)">
+          <label><input type="radio" name="display" id="display-C" value="C" checked>g/L</label>
+          <label><input type="radio" name="display" id="display-ratio" value="ratio">C/Cᵢ</label>
+        </div>
+      </div>
+
+      <p class="view-empty" id="no-result" hidden>No results yet. Enter the inputs under Parameters and Setup, then press Run.</p>
+
+      <div class="output" id="output">
+        <header class="print-only print-head" id="print-head"></header>
+
+        <div class="kpis" id="kpis"></div>
+
+        <div class="charts" id="results-graphs">
+          <section class="card" id="card-profile">
+            <div class="card-heading">
+              <h2 class="card-title">Concentration profiles</h2>
+              <p class="card-sub">Salinity against depth, before leaching and after each application</p>
+            </div>
+            <div id="profile-chart"></div>
+          </section>
+          <section class="card" id="card-breakthrough">
+            <div class="card-heading">
+              <h2 class="card-title">Breakthrough curves</h2>
+              <p class="card-sub">Salinity against time at the selected depths; A1, A2 … mark the end of each application</p>
+            </div>
+            <div id="bt-chart"></div>
+          </section>
+        </div>
+
+        <section class="card" id="card-tables">
+          <div class="card-head">
+            <div class="tabs" role="tablist" aria-label="Data tables">
+              <button type="button" class="tab" role="tab" id="tab-profile" aria-controls="data-panel">Profile</button>
+              <button type="button" class="tab" role="tab" id="tab-storage" aria-controls="data-panel">Salt storage</button>
+              <button type="button" class="tab" role="tab" id="tab-breakthrough" aria-controls="data-panel">Breakthrough</button>
+              <button type="button" class="tab" role="tab" id="tab-fit" aria-controls="data-panel" hidden>Fit</button>
+            </div>
+            <div class="card-actions">
+              <button type="button" class="btn btn-sm" id="copy-table" title="Copy as tab-separated text for Excel">Copy</button>
+              <button type="button" class="btn btn-sm" id="download-table" title="Download this table as CSV">CSV</button>
+            </div>
+          </div>
+          <div class="table-wrap" id="data-panel" role="tabpanel" tabindex="0">
+            <table class="data" id="data-table"></table>
+          </div>
+        </section>
+
+        <div class="print-only" id="print-report"></div>
+
+        <p class="footnote">
+        One-dimensional advection–dispersion equation with constant <i>v</i>, <i>D</i> and <i>θ</i>.
+        Analytical solution of Ogata and Banks (1961, U.S. Geological Survey Professional Paper 411-A),
+        extended by superposition for a depth-varying initial profile. Details: <a href="#/model">Model</a>.
+      </p>
+      </div>
+    </div>
+
+    <section class="view narrow" id="export-view" aria-labelledby="export-title">
+      <header class="view-head">
+        <h2 class="view-title" id="export-title">Export</h2>
+        <p class="view-lead" id="export-note"></p>
+      </header>
+      <div class="export-list">
+        <button type="button" class="export-item" id="export-xlsx">
+          <span class="export-name">Excel (XLSX)</span>
+          <span class="export-desc">The inputs and all tables in one workbook: profiles in g/L and relative, salt storage, breakthrough curves and the fit.</span>
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5V10M5 7l3 3 3-3"/><path d="M2.5 11.5v2h11v-2"/></svg>
+        </button>
+        <button type="button" class="export-item" id="export-csv">
+          <span class="export-name">CSV</span>
+          <span class="export-desc" id="export-csv-desc">The table selected under Results.</span>
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5V10M5 7l3 3 3-3"/><path d="M2.5 11.5v2h11v-2"/></svg>
+        </button>
+        <button type="button" class="export-item" id="export-pdf">
+          <span class="export-name">PDF (report)</span>
+          <span class="export-desc">A report with the inputs, the key figures, both graphs and the tables. In the print dialog, choose Save as PDF.</span>
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5V10M5 7l3 3 3-3"/><path d="M2.5 11.5v2h11v-2"/></svg>
+        </button>
+        <button type="button" class="export-item" id="export-png">
+          <span class="export-name">PNG (graphs)</span>
+          <span class="export-desc">Both graphs as one picture at high resolution, for slides and documents.</span>
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5V10M5 7l3 3 3-3"/><path d="M2.5 11.5v2h11v-2"/></svg>
+        </button>
+        <button type="button" class="export-item" id="export-svg">
+          <span class="export-name">SVG (graphs)</span>
+          <span class="export-desc">Both graphs as one vector drawing that stays sharp at any size, for papers.</span>
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5V10M5 7l3 3 3-3"/><path d="M2.5 11.5v2h11v-2"/></svg>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Status and Run under every view; the Run button submits the form (Enter in a field). -->
+  <div class="runbar">
+    <p class="run-status" id="run-status" role="status" aria-live="polite"></p>
+    <div class="runbar-actions">
+      <button type="button" class="btn btn-quiet" id="reset-example" title="Restore the example inputs">Reset</button>
+      <button type="submit" form="inputs" class="btn btn-primary btn-run" id="run" title="Calculate the results for these inputs (Enter)">
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.2v9.6l7.5-4.8z"/></svg>Run
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="shell page" id="page-data" hidden>
+  <aside class="sidebar" aria-label="Experiments and plots">
+    <section class="panel" id="exp-panel">
+      <div class="panel-head">
+        <h2 class="panel-title">Experiments</h2>
+        <button type="button" class="link-btn" id="exp-new">+ New</button>
+      </div>
+      <ul class="list" id="exp-list"></ul>
+    </section>
+    <section class="panel" id="plot-panel" hidden>
+      <div class="panel-head">
+        <h2 class="panel-title">Plots</h2>
+        <button type="button" class="link-btn" id="plot-new">+ New</button>
+      </div>
+      <ul class="list" id="plot-list"></ul>
+    </section>
+  </aside>
+
+  <main class="main">
+    <div class="banner" id="data-error" role="alert" hidden></div>
+
+    <section class="card empty" id="data-empty" hidden>
+      <h2 class="card-title">Field data</h2>
+      <p id="data-empty-text"></p>
+      <button type="button" class="btn btn-primary" id="data-empty-action" hidden></button>
+    </section>
+
+    <div class="output" id="data-content" hidden>
+      <div class="toolbar">
+        <p class="crumb" id="data-crumb"></p>
+        <div class="toolbar-actions">
+          <span class="hint" id="run-hint"></span>
+          <button type="button" class="btn btn-primary" id="run-model" title="Run the model with the saved data of this plot">Run model</button>
+        </div>
+      </div>
+
+      <section class="card empty" id="data-overview">
+        <p id="data-overview-text"></p>
+        <button type="button" class="btn btn-primary" id="data-overview-action" hidden>New experiment</button>
+      </section>
+
+      <div class="output" id="data-detail" hidden>
+        <div class="cards-2">
+          <section class="card">
+            <div class="card-head">
+              <h2 class="card-title">Experiment</h2>
+              <div class="card-actions">
+                <button type="button" class="btn btn-sm btn-quiet btn-delete" id="exp-delete">Delete</button>
+                <button type="button" class="btn btn-sm btn-save" id="exp-save" disabled>Save</button>
+              </div>
+            </div>
+            <form class="fields" id="exp-form" novalidate autocomplete="off">
+              <div class="row">
+                <label for="exp-name">Name</label>
+                <input class="text-input" id="exp-name" type="text" maxlength="120">
+              </div>
+              <div class="row">
+                <label for="exp-site">Site</label>
+                <input class="text-input" id="exp-site" type="text" maxlength="200">
+              </div>
+              <div class="row">
+                <label for="exp-u" title="Average pore-water velocity v = q/θ, where q is the water (Darcy) flux (cm/h)">Flow velocity <i>v</i></label>
+                <span class="input-unit"><input id="exp-u" type="text" inputmode="decimal"><span class="unit">cm/h</span></span>
+              </div>
+              <div class="row">
+                <label for="exp-D" title="Longitudinal dispersion coefficient D (cm²/h); dispersivity α = D/v">Dispersion <i>D</i></label>
+                <span class="input-unit"><input id="exp-D" type="text" inputmode="decimal"><span class="unit">cm²/h</span></span>
+              </div>
+              <div class="row">
+                <label for="exp-theta" title="Porosity filled with water during leaching, i.e. the volumetric water content θ (m³/m³)">Porosity <i>θ</i></label>
+                <span class="input-unit"><input id="exp-theta" type="text" inputmode="decimal"><span class="unit">m³/m³</span></span>
+              </div>
+              <div class="row">
+                <label for="exp-mode" title="Layer: composite sample of the layer above each depth. Point: value at exactly that depth.">Sample type</label>
+                <select id="exp-mode">
+                  <option value="layer">Layers (0–25, 25–50 … cm)</option>
+                  <option value="point">Points (25, 50 … cm)</option>
+                </select>
+              </div>
+            </form>
+          </section>
+
+          <section class="card" id="plot-card" hidden>
+            <div class="card-head">
+              <h2 class="card-title">Plot</h2>
+              <div class="card-actions">
+                <button type="button" class="btn btn-sm btn-quiet btn-delete" id="plot-delete">Delete</button>
+                <button type="button" class="btn btn-sm btn-save" id="plot-save" disabled>Save</button>
+              </div>
+            </div>
+            <form class="fields" id="plot-form" novalidate autocomplete="off">
+              <div class="row">
+                <label for="plot-name">Name</label>
+                <input class="text-input" id="plot-name" type="text" maxlength="120">
+              </div>
+              <div class="row">
+                <label for="plot-treatment" title="Water used for leaching (field treatment)">Treatment</label>
+                <select id="plot-treatment"></select>
+              </div>
+              <div class="row">
+                <label for="plot-cin" title="Salinity of the applied water C₀ (g/L): the concentration at the soil surface">Water salinity <i>C</i><sub>0</sub></label>
+                <span class="input-unit"><input id="plot-cin" type="text" inputmode="decimal"><span class="unit">g/L</span></span>
+              </div>
+              <div class="row">
+                <label for="plot-napp" title="Number of water applications n">Applications <i>n</i></label>
+                <span class="input-unit"><input id="plot-napp" type="text" inputmode="numeric"><span class="unit">×</span></span>
+              </div>
+              <div class="row">
+                <label for="plot-mm" title="Depth of water per application W (mm); 250 mm = 2,500 m³/ha. Each application lasts t = W/(v·θ)">Water per application <i>W</i></label>
+                <span class="input-unit"><input id="plot-mm" type="text" inputmode="decimal"><span class="unit">mm</span></span>
+              </div>
+            </form>
+          </section>
+
+          <section class="card empty" id="plot-empty">
+            <p id="plot-empty-text"></p>
+            <button type="button" class="btn btn-primary" id="plot-empty-action" hidden>New plot</button>
+          </section>
+        </div>
+
+        <section class="card" id="meas-card" hidden>
+          <div class="card-head">
+            <h2 class="card-title" title="Salinity per layer at each sampling time. Paste a block from Excel into any cell.">Measured salinity <span class="card-unit">g/L</span></h2>
+            <div class="card-actions">
+              <button type="button" class="btn btn-sm btn-quiet" id="grid-add" title="Add a column for another sampling time (for example after wheat)">+ Add time</button>
+              <button type="button" class="btn btn-sm btn-save" id="grid-save" disabled>Save</button>
+            </div>
+          </div>
+          <div class="table-wrap" title="Paste a block from Excel into any cell">
+            <table class="data grid" id="grid"></table>
+          </div>
+        </section>
+
+        <section class="card" id="runs-card" hidden>
+          <div class="card-head">
+            <h2 class="card-title" title="Saved model runs of this plot, newest first">Runs</h2>
+          </div>
+          <div class="table-wrap">
+            <table class="data" id="runs-table"></table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="js/config.js"></script>
+<script src="js/solver.js"></script>
+<script src="js/model.js"></script>
+<script src="js/report.js"></script>
+<script src="js/xlsx.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/data.js"></script>
+<script src="js/api.js"></script>
+<script src="js/demo.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+<script src="js/datapage.js"></script>
+<script src="js/shell.js"></script>
+</body>
+</html>
